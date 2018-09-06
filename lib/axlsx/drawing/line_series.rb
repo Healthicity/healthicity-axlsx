@@ -27,6 +27,14 @@ module Axlsx
     # @return [String]
     attr_reader :marker_symbol
 
+    # custom marker color
+    # @return [String]
+    attr_reader :marker_color
+
+    # custom marker size
+    # @return [String]
+    attr_reader :marker_size
+
     # line smoothing on values
     # @return [Boolean]
     attr_reader :smooth
@@ -38,6 +46,8 @@ module Axlsx
     def initialize(chart, options={})
       @show_marker = false
       @marker_symbol = options[:marker_symbol] ? options[:marker_symbol] : :default
+      @marker_color = options[:marker_color]
+      @marker_size = options[:marker_size] ? options[:marker_size].to_s : "4"
       @smooth = false
       @labels, @data = nil, nil
       super(chart, options)
@@ -60,6 +70,17 @@ module Axlsx
     def marker_symbol=(v)
       Axlsx::validate_marker_symbol(v)
       @marker_symbol = v
+    end
+
+    # @see marker_size
+    def marker_size=(v)
+      Axlsx::validate_unsigned_int(v)
+      @marker_size = v.to_s
+    end
+
+    # @see marker_color
+    def marker_color=(v)
+      @marker_color = v
     end
 
     # @see smooth
@@ -86,12 +107,7 @@ module Axlsx
           str << '</c:spPr>'
         end
 
-        if !@show_marker
-          str << '<c:marker><c:symbol val="none"/></c:marker>'
-        elsif @marker_symbol != :default
-          str << '<c:marker><c:symbol val="' + @marker_symbol.to_s + '"/></c:marker>'
-        end
-
+        marker_xml(str)
         @labels.to_xml_string(str) unless @labels.nil?
         @data.to_xml_string(str) unless @data.nil?
         str << ('<c:smooth val="' << ((smooth) ? '1' : '0') << '"/>')
@@ -99,6 +115,27 @@ module Axlsx
     end
 
     private
+
+    # returns xml for series marker
+    def marker_xml(str)
+      if !@show_marker
+        str << '<c:marker><c:symbol val="none"/></c:marker>'
+      elsif @marker_symbol != :default
+        str << '<c:marker><c:symbol val="' + @marker_symbol.to_s + '"/><c:size val="' + @marker_size.to_s + '"/>'
+        str << marker_color_xml.to_s + '</c:marker>'
+      end
+    end
+
+    def marker_color_xml
+      str = ""
+      if @marker_color
+        str << '<c:spPr>'
+        str << '<a:solidFill><a:srgbClr val="' + @marker_color + '"/></a:solidFill>'
+        str << '<a:ln><a:solidFill><a:srgbClr val="' + @marker_color + '"/></a:solidFill></a:ln>'
+        str << '</c:spPr>'
+      end
+      str
+    end
 
     # assigns the data for this series
     def data=(v) DataTypeValidator.validate "Series.data", [NumDataSource], v; @data = v; end
