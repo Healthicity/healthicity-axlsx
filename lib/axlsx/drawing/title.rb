@@ -11,6 +11,10 @@ module Axlsx
     # @return [String]
     attr_reader :text_size
 
+    # Text size property
+    # @return [String]
+    attr_reader :text_typeface
+
     # The cell that holds the text for the title. Setting this property will automatically update the text attribute.
     # @return [Cell]
     attr_reader :cell
@@ -39,6 +43,14 @@ module Axlsx
     def text_size=(v)
       DataTypeValidator.validate 'Title.text_size', String, v
       @text_size = v
+      @cell = nil
+      v
+    end
+
+    # @see text_typeface
+    def text_typeface=(v)
+      DataTypeValidator.validate 'Title.text_typeface', String, v
+      @text_typeface = v
       @cell = nil
       v
     end
@@ -79,7 +91,9 @@ module Axlsx
             str << '<a:lstStyle/>'
             str << '<a:p>'
               str << '<a:r>'
-                str << ('<a:rPr sz="' << @text_size.to_s << '"/>')
+                str << ('<a:rPr sz="' << @text_size.to_s << '">')
+                str << ('<a:latin typeface="' << @text_typeface.to_s << '"/>') if @text_typeface
+                str << ("</a:rPr>")
                 str << ('<a:t>' << @text.to_s << '</a:t>')
               str << '</a:r>'
             str << '</a:p>'
